@@ -1,0 +1,52 @@
+.section {
+  margin-top: 0.75rem;
+}
+
+.heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94969f;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  max-width: 100%;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-h);
+  background: var(--bg);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--myntra-pink);
+  color: var(--myntra-pink);
+  background: var(--myntra-pink-soft);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--myntra-pink);
+  outline-offset: 2px;
+}

@@ -1,0 +1,7 @@
+.shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: var(--bg-page);
+}

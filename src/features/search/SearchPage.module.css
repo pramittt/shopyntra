@@ -1,0 +1,55 @@
+.main {
+  flex: 1;
+  padding: 1.25rem 1.25rem 2.5rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.header {
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 0.35rem;
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.subtitle code {
+  font-size: 0.85em;
+}
+
+.searchStack {
+  max-width: 640px;
+  margin-bottom: 0.25rem;
+}
+
+.error {
+  margin: 1rem 0 0;
+  color: #d53636;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.empty {
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+  color: var(--text);
+}
+
+.hint {
+  margin: 1.25rem 0 0;
+  color: var(--text);
+  font-size: 0.875rem;
+}

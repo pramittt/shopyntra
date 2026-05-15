@@ -1,0 +1,74 @@
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #eaeaec 0%,
+    #f4f4f6 22%,
+    #fafafa 45%,
+    #f4f4f6 68%,
+    #eaeaec 100%
+  );
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.15s ease-in-out infinite;
+  animation-delay: var(--sk-delay, 0ms);
+  border-radius: 2px;
+}
+
+.image {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  margin: 0;
+  composes: skeleton;
+}
+
+.line {
+  composes: skeleton;
+  height: 0.55rem;
+}
+
+.lineLg {
+  width: 95%;
+}
+
+.lineMd {
+  width: 78%;
+}
+
+.lineSm {
+  width: 42%;
+  height: 0.65rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--code-bg);
+  }
+}
