@@ -27,8 +27,6 @@ export function recordRecentSearchTerm(term: string): string[] {
   )
   try {
     localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(next))
-  } catch {
-    /* ignore quota / private mode */
-  }
+  } catch {}
   return next
 }

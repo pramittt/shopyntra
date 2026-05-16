@@ -53,3 +53,18 @@
   color: var(--text);
   font-size: 0.875rem;
 }
+
+.results {
+  margin-top: 1rem;
+}
+
+.sentinel {
+  height: 1px;
+  margin-top: 0.5rem;
+}
+
+.endHint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: #94969f;
+}

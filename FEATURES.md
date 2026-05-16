@@ -4,7 +4,7 @@ This document describes what the app does and how the main pieces fit together. 
 
 ## Overview
 
-**Shopyntra** is a small React demo for **catalog search**: users enter a query, results load from the **SearchSpring** JSON API, and products render in a responsive grid with pagination, loading states, and product cards that highlight pricing and sale status.
+**Shopyntra** is a React demo storefront for **catalog search** powered by **SearchSpring**. Users search products, filter and sort results, scroll through an infinite product grid, and manage a **bag** and **wishlist** with size-aware line items. State persists in `localStorage` for cart, wishlist, and recent searches.
 
 ## Tech stack
 
@@ -17,86 +17,143 @@ This document describes what the app does and how the main pieces fit together. 
 
 ## High-level layout
 
-- **`App`** (`src/App.tsx`) — Shell with top navigation and the main search surface.
-- **`SearchPage`** (`src/features/search/SearchPage.tsx`) — Search form, recent-search shortcuts, error and empty states, pagination, and **`ProductGrid`**.
+```
+App (CartProvider → WishlistProvider)
+├── AppNav          — sticky top bar; wishlist + bag icons with counts
+├── SearchPage      — search, filters, sort, infinite results grid
+├── CartSidePanel   — slides in from the right
+├── WishlistSidePanel — slides in from the right
+└── CartSnackbar    — toast after cart / wishlist actions
+```
 
-Data flow: `SearchPage` → **`useProductSearch`** → **`fetchSearchResults`** → JSON mapped to **`SearchResponse`** / **`SearchProduct`**.
+Data flow for search:
+
+`SearchPage` → **`useProductSearch`** → **`fetchSearchResults`** → **`ISearchResponse`** / **`ISearchProduct`**
+
+## Type organization
+
+Domain and UI types use an **`I` prefix** on interfaces (e.g. `ISearchProduct`, `ICartLineItem`). Each feature or component folder can expose a local **`types.ts`**:
+
+| Location | Examples |
+|----------|----------|
+| `src/features/search/api/types.ts` | `ISearchProduct`, `ISearchResponse`, `IActiveFilter`, `ISortSelection`, `IPriceRange` |
+| `src/context/types.ts` | `ICartLineItem`, `ICartContextValue`, `IWishlistEntry` |
+| `src/features/search/components/types.ts` | `IFacetPanelProps`, `ISortSelectProps` |
+| Component folders | `IProductCardProps`, `ILeftSidePanelProps`, etc. |
+
+`searchApi.ts` re-exports API types via `export * from './types'`.
 
 ## Search and API
 
 ### Endpoint
 
-- **`src/features/search/api/searchApi.ts`** builds a URL to SearchSpring’s `search.json` endpoint using a fixed **`SEARCH_SITE_ID`** and query params (`q`, `page`, `resultsFormat=native`, etc.).
-- **`fetchSearchResults`** performs a `fetch` with an optional **`AbortSignal`** so in-flight requests are cancelled when the query or page changes.
+- **`src/features/search/api/searchApi.ts`** builds URLs to SearchSpring `search.json` using **`SEARCH_SITE_ID`** (`scmq7n`), `resultsFormat=native`, and **`RESULTS_PER_PAGE`** (48).
+- Query params: `q`, `page`, `resultsPerPage`, `filter.{field}`, `sort.{field}`.
+- **`fetchSearchResults`** supports **`AbortSignal`** for cancellation.
 
-### Types
+### Filters and sort
 
-- **`SearchProduct`** — `id`, optional `name`, `thumbnailImageUrl`, `price`, `msrp`, and optional **`on_sale`** as `string[]` (SearchSpring-style facets; the UI treats **`"Yes"`** in that array as on sale).
-- **`SearchPagination`** / **`SearchResponse`** — Mirrors the API shape used by the UI for results and page controls.
+- **Facet filters** — `filter.{field}={value}` from **`IActiveFilter[]`**.
+- **Price range** — `filter.price.low` and `filter.price.high` via **`withPriceRange`**, **`parsePriceRangeFromFilters`**, **`getPriceBounds`**.
+- **Sort** — `sort.{field}=asc|desc`; UI default “Best match” omits sort params (relevance).
+- Helpers: **`stableFiltersKey`**, **`sortKey`**, **`parseAmount`**, **`getProductSizes`**, **`abbreviateSizeLabel`**, **`parseQuantityAvailable`**, **`isLowStock`**.
 
 ### Search hook (`useProductSearch`)
 
 **`src/features/search/hooks/useProductSearch.ts`** owns:
 
-- Input value vs **submitted** query (search runs on submit / chosen recent term, not on every keystroke by default through this hook’s API).
-- **Page** state and **`load(query, page)`** orchestration.
-- **Abort** of the previous request when a new one starts.
-- **Loading** and **error** state for the UI.
+- Input vs **submitted** query (search on submit or recent-term pick).
+- **Active filters**, **sort selection**, and **price bounds** derived from facet catalog.
+- **Infinite scroll** — appends pages with **`dedupeAppend`**; **`hasMore`** / **`loadMore`** from pagination.
+- **Loading** / **loadingMore** / **error** states.
+- **Facet catalog ref** — keeps facet UI when a filtered response returns no facet payload (e.g. zero results).
+- Scroll-to-results on filter/sort change via **`topNavId`**.
 
 #### Session cache
 
-- An in-memory **`Map`** keyed by **`sessionCacheKey(query, page)`** stores **`SearchResponse`** for the current browser session.
-- **`rememberSearchSessionCache`** enforces a max size (**`SEARCH_SESSION_CACHE_MAX`**, 40 entries) by evicting the oldest key. Revisiting the same query/page avoids a network round-trip.
+- In-memory **`Map`** keyed by **`sessionCacheKey(query, page, sort, filtersKey)`**.
+- Max **40** entries (**`SEARCH_SESSION_CACHE_MAX`**); evicts oldest on overflow.
 
 #### Recent searches
 
-- **`src/features/search/lib/recentSearches.ts`** persists up to **5** distinct terms in **`localStorage`** (`shopyntra_recent_searches`), with safe parsing and quota handling.
-- After a successful search for page **1**, the term is recorded and exposed to the UI for **`QuickSearch`**.
+- Up to **5** terms in **`localStorage`** (`shopyntra_recent_searches`) via **`recentSearches.ts`**.
 
 ## Search page UI
 
-- **`SearchForm`** — Controlled input; submit triggers **`runSearch`**.
-- **`QuickSearch`** — Chips built from **`recentSearches`**; picking one calls **`startSearch(term)`** (sets query, resets to page 1, loads).
-- **`PaginationBar`** (top and bottom) — Previous/next and a sliding window of page numbers; **`busy`** disables controls while loading. Changing page calls **`onPageChange`**, which reloads and scrolls the top pagination region into view for context.
+### Toolbar (sticky)
 
-## Product grid and loading
+**`ResultsToolbar`** sits below the nav (`top: 52px`) while scrolling results:
 
-**`src/components/ProductGrid/ProductGrid.tsx`**:
+- **Filter** / **Sort** buttons on the left — open **`LeftSidePanel`** drawers from the left (mirror of bag/wishlist from the right).
+- Toggle open/closed with a **cross icon** on the active button; panel header also has a close control.
+- **“Showing X of Y”** on the right when results exist.
+- **`ActiveFilterChips`** — removable chips for applied filters (including price range); **Clear all** when multiple are active.
 
-- While **`loading`**, renders a grid of **`ProductSkeletonCard`** placeholders (staggered animation via CSS custom property **`--sk-delay`**), with **`VisuallyHidden`** “Loading results” and **`aria-live="polite"`** for assistive tech.
-- When idle, maps **`products`** to **`ProductCard`** in a semantic **`<ul>` / `<li>`** list.
+### Filter panel
+
+**`FacetPanel`** inside **`LeftSidePanel`**:
+
+- Facet value lists (color facet hidden in UI).
+- Color swatches via **`colorSwatch.ts`** when facet type is palette.
+- **`PriceRangeFilter`** — dual range sliders; **debounced commit on change** (~350ms) plus immediate flush on release; reads live input values to avoid stale state.
+
+### Sort panel
+
+**`SortSelect`** (sheet variant in left panel) — list options; **“Best match”** when no sort; API `relevance` options excluded from the list.
+
+### Results
+
+- **`ProductGrid`** — skeleton grid while loading; main grid + trailing skeletons while **`loadingMore`**.
+- **IntersectionObserver** sentinel triggers **`loadMore`** near the viewport bottom.
+- Empty and end-of-results copy.
 
 ## Product card
 
-**`src/components/ProductCard/ProductCard.tsx`** + **`ProductCard.module.css`**
+**`ProductCard`** — image (prefers **`imageUrl`**, falls back to thumbnail), **sale** badge, **wishlist** heart, **quick-add** bag control.
 
-### Content
+- **Sizes** — from `size_dress` / `size` / `size_universal`; chips abbreviated via **`abbreviateSizeLabel`**.
+- **Quick add** — no sizes: add directly; with sizes: overlay picker, then **`addItem(product, { size })`**.
+- **Wishlist** — **`toggleWishlist`**.
+- **Brand**, **name**, truncated **description** (`truncate.ts`, 150 chars).
+- **Price** / strikethrough **MSRP**; **“Only few left”** when **`isLowStock`** on **`quantity_available`**.
 
-- **Image** — Lazy-loaded when **`thumbnailImageUrl`** exists; fixed width/height hints for layout stability.
-- **Placeholder** — Gradient block when there is no image.
-- **Title** — `name` or “Untitled”; clamped to two lines in CSS.
-- **Price** — Renders **`msrp`** struck through and current **`price`** in bold when **`parseAmount(msrp)`** is greater than **`parseAmount(price)`** (sale vs list logic independent of `on_sale`).
+Sale badge and image zoom use CSS animations with **`prefers-reduced-motion`** fallbacks.
 
-### Sale badge
+## Cart
 
-- Shown when **`product.on_sale?.includes('Yes')`** (supports API values like `["Yes"]`).
-- Markup: outer **`saleTag`**, inner **`saleTagText`** so animations can layer a shine **(`::after`)** under legible text (**`z-index`** stacking).
+**`CartContext`** (`shopyntra-cart` in **`localStorage`**):
 
-### Motion and hover (CSS)
+- Lines keyed by **`lineId`** = `productId` + optional size.
+- **`addItem`** validates size when product has sizes; **snackbar** feedback.
+- **`removeLine`**, **`setLineQuantity`**, **`clearCart`**, **`subtotal`** via **`parseAmount`**.
+- **`CartSidePanel`** — right drawer; quantity controls; **Save for later** → wishlist via **`cartLineToSearchProduct`**.
 
-- **Card** — Slightly stronger shadow on hover.
-- **Image area** — **`overflow: hidden`** on **`imageWrap`**; **`.image`** (and placeholder) use **`transform: scale(...)`** with **`transition`** on card hover so the media zooms inside the frame without reflowing text.
-- **Sale tag**
-  - **`saleTagEnter`** — One-shot entrance (opacity + scale + small vertical motion, overshoot easing).
-  - **`saleTagPulse`** — Repeating soft “ring” via animated **`box-shadow`**.
-  - **`saleTagShine`** — Periodic skewed highlight sweep on **`::after`**.
-  - **`.card:hover .saleTag`** — Slight scale-up on the badge when the whole card is hovered.
-- **`prefers-reduced-motion: reduce`** — Animations on the tag and shine layer are disabled so the badge stays static and readable.
+## Wishlist
+
+**`WishlistContext`** (`shopyntra-wishlist` in **`localStorage`**):
+
+- **`toggleWishlist`**, **`upsertWishlistProduct`**, **`removeFromWishlist`**, **`isInWishlist`**.
+- Opening wishlist closes cart (and vice versa via nav).
+- **`WishlistSidePanel`** — **Move to bag** with size picker when needed.
+
+## Side panels
+
+| Component | Side | z-index | Portal |
+|-----------|------|---------|--------|
+| **`LeftSidePanel`** | Left | 300–301 | `document.body` |
+| **`CartSidePanel`** / **`WishlistSidePanel`** | Right | 300–301 | In-tree |
+
+Left panels start below the nav (`top: 52px`). Backdrop click and **Escape** close panels.
+
+## Navigation
+
+**`AppNav`** — sticky brand + wishlist/bag icon buttons with count badges.
 
 ## Styling conventions
 
-- **CSS Modules** per component (e.g. **`*.module.css`**).
-- Shared palette and typography variables live in **`src/index.css`** (e.g. **`--accent`**, **`--text-h`**, **`--shadow-card`**), aligned with a Myntra-inspired look.
+- CSS Modules per component.
+- Global tokens in **`src/index.css`** (Myntra-inspired pink accent, neutrals, shadows).
+- **`cn()`** for conditional class names.
 
 ## Scripts
 
@@ -109,6 +166,7 @@ Data flow: `SearchPage` → **`useProductSearch`** → **`fetchSearchResults`** 
 
 ## Extending the app
 
-- **New product fields** — Extend **`SearchProduct`** in **`searchApi.ts`**, then read them in **`ProductCard`** or other views. If the API nests fields differently, add a normalizer in **`fetchSearchResults`** before the rest of the app consumes data.
-- **Different site / env** — Replace or parameterize **`SEARCH_SITE_ID`** and URL building in **`searchApi.ts`** (and avoid committing secrets; this integration is public JSON only).
-- **Heavier motion** — Prefer keeping decorative animation in CSS; respect **`prefers-reduced-motion`** for anything looping or attention-grabbing.
+- **New product fields** — Add to **`ISearchProduct`** in **`src/features/search/api/types.ts`**, then use in **`ProductCard`** or normalizers in **`fetchSearchResults`** if needed.
+- **New filters** — Extend **`FacetPanel`** / **`useProductSearch`** toggle logic; ensure **`stableFiltersKey`** covers new filter fields.
+- **Site ID** — Parameterize **`SEARCH_SITE_ID`** in **`searchApi.ts`** (public JSON API only today).
+- **Cart / wishlist** — Extend **`ICartLineItem`** / **`IWishlistEntry`** in **`src/context/types.ts`** and persistence normalizers in contexts.

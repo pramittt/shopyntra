@@ -1,15 +1,8 @@
-import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
+import type { IVisuallyHiddenProps } from './types'
 import styles from './VisuallyHidden.module.css'
 
-type VisuallyHiddenProps = {
-  children: ReactNode
-  as?: 'span' | 'label'
-  htmlFor?: string
-  className?: string
-}
-
-export function VisuallyHidden({ children, as = 'span', htmlFor, className }: VisuallyHiddenProps) {
+export function VisuallyHidden({ children, as = 'span', htmlFor, className }: IVisuallyHiddenProps) {
   const Tag = as
   return (
     <Tag className={cn(styles.root, className)} htmlFor={htmlFor}>

@@ -1,13 +1,6 @@
 import { VisuallyHidden } from '../VisuallyHidden/VisuallyHidden'
+import type { ISearchFormProps } from './types'
 import styles from './SearchForm.module.css'
-
-export type SearchFormProps = {
-  formId: string
-  value: string
-  placeholder?: string
-  onChange: (value: string) => void
-  onSubmit: () => void
-}
 
 export function SearchForm({
   formId,
@@ -15,7 +8,7 @@ export function SearchForm({
   placeholder = 'Search for products, brands and more',
   onChange,
   onSubmit,
-}: SearchFormProps) {
+}: ISearchFormProps) {
   return (
     <form
       className={styles.form}

@@ -1,6 +1,11 @@
 .nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   min-height: 52px;
   padding: 0 1.25rem;
   background: var(--bg);
@@ -16,4 +21,54 @@
   text-transform: lowercase;
   color: var(--myntra-pink);
   user-select: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.iconBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--text-h);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: var(--code-bg);
+  color: var(--accent);
+}
+
+.cartIcon {
+  display: block;
+}
+
+.wishlistNavIcon {
+  display: block;
+}
+
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  color: #fff;
+  text-align: center;
+  background: var(--accent);
+  border-radius: 999px;
 }

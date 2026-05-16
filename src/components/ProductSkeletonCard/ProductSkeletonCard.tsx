@@ -1,12 +1,9 @@
 import type { CSSProperties } from 'react'
 import { cn } from '../../lib/cn'
+import type { IProductSkeletonCardProps } from './types'
 import styles from './ProductSkeletonCard.module.css'
 
-export type ProductSkeletonCardProps = {
-  index: number
-}
-
-export function ProductSkeletonCard({ index }: ProductSkeletonCardProps) {
+export function ProductSkeletonCard({ index }: IProductSkeletonCardProps) {
   return (
     <article
       className={styles.card}

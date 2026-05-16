@@ -1,17 +1,11 @@
-import type { SearchProduct } from '../../features/search/api/searchApi'
 import { cn } from '../../lib/cn'
 import { ProductCard } from '../ProductCard/ProductCard'
 import { ProductSkeletonCard } from '../ProductSkeletonCard/ProductSkeletonCard'
 import { VisuallyHidden } from '../VisuallyHidden/VisuallyHidden'
+import type { IProductGridProps } from './types'
 import styles from './ProductGrid.module.css'
 
-export type ProductGridProps = {
-  loading: boolean
-  skeletonCount: number
-  products: SearchProduct[]
-}
-
-export function ProductGrid({ loading, skeletonCount, products }: ProductGridProps) {
+export function ProductGrid({ loading, loadingMore, skeletonCount, products }: IProductGridProps) {
   if (loading) {
     return (
       <div className={styles.loader} role="status" aria-live="polite">
@@ -28,12 +22,23 @@ export function ProductGrid({ loading, skeletonCount, products }: ProductGridPro
   }
 
   return (
-    <ul className={styles.grid}>
-      {products.map((product) => (
-        <li key={product.id}>
-          <ProductCard product={product} />
-        </li>
-      ))}
-    </ul>
+    <div className={styles.wrap}>
+      <ul className={styles.grid}>
+        {products.map((product) => (
+          <li key={product.id}>
+            <ProductCard product={product} />
+          </li>
+        ))}
+      </ul>
+      {loadingMore ? (
+        <ul className={cn(styles.grid, styles.moreSkeleton)} aria-hidden>
+          {Array.from({ length: 6 }, (_, i) => (
+            <li key={`msk-${i}`}>
+              <ProductSkeletonCard index={i + 100} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   )
 }

@@ -14,3 +14,13 @@
 .loader {
   margin-top: 0.25rem;
 }
+
+.wrap {
+  margin-top: 0.25rem;
+}
+
+.moreSkeleton {
+  margin-top: 0.75rem;
+  pointer-events: none;
+  opacity: 0.72;
+}

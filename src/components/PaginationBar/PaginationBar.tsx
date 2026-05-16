@@ -1,5 +1,5 @@
-import type { SearchPagination } from '../../features/search/api/searchApi'
 import { cn } from '../../lib/cn'
+import type { IPaginationBarProps } from './types'
 import styles from './PaginationBar.module.css'
 
 function buildPageWindow(current: number, total: number, radius = 2): number[] {
@@ -11,14 +11,7 @@ function buildPageWindow(current: number, total: number, radius = 2): number[] {
   return pages
 }
 
-export type PaginationBarProps = {
-  pagination: SearchPagination | null
-  busy: boolean
-  onPageChange: (page: number) => void
-  idPrefix: string
-}
-
-export function PaginationBar({ pagination, busy, onPageChange, idPrefix }: PaginationBarProps) {
+export function PaginationBar({ pagination, busy, onPageChange, idPrefix }: IPaginationBarProps) {
   if (!pagination || pagination.totalPages < 1) return null
 
   const { currentPage, totalPages } = pagination

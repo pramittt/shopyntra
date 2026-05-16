@@ -1,0 +1,140 @@
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+  padding: 0.75rem 0.85rem;
+  box-shadow: var(--shadow-card);
+}
+
+.panelSheet {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.panelDropdown {
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 0.85rem;
+  box-shadow: none;
+}
+
+.heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: 0.02em;
+}
+
+.clearBtn {
+  margin: 0 0 0.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.clearBtn:hover:not(:disabled) {
+  background: var(--code-bg);
+}
+
+.clearBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.facet {
+  margin: 0 0 0.85rem;
+}
+
+.facet:last-child {
+  margin-bottom: 0;
+}
+
+.facetLabel {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.values {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.valueBtn {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.3rem 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--text-h);
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.valueBtn:hover {
+  background: var(--code-bg);
+}
+
+.valueBtnActive {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.count {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: #94969f;
+  font-weight: 400;
+}
+
+.colorValues {
+  max-height: none;
+}
+
+.colorBtn {
+  align-items: center;
+}
+
+.valueLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.swatch {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(40, 44, 63, 0.08);
+}
+
+.swatchBorder {
+  box-shadow: inset 0 0 0 1px rgba(40, 44, 63, 0.22);
+}
